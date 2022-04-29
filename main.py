@@ -19,7 +19,38 @@ def modifiedFilesPerCommit(commit, stringFileName):
 
     return False
 
+def DMM_ocjena(repoString):
+    rm = Repository(repoString)
+    allunit = 0
+    allcomplex = 0
+    allinterfac = 0
+    size = 0
+    name = ""
+    for commit in rm.traverse_commits():
+        if name == "":
+            name = commit.project_path  # mozda umjesto toga author.name
 
+        size += 1
+        if commit.dmm_unit_size is not None:
+            allunit += commit.dmm_unit_size
+        if commit.dmm_unit_complexity is not None:
+            allcomplex += commit.dmm_unit_complexity
+        if commit.dmm_unit_interfacing is not None:
+            allinterfac += commit.dmm_unit_interfacing
+
+    unitocjena = allunit / size
+    complexocjena = allcomplex / size
+    interocjena = allinterfac / size
+
+    finalna = (unitocjena + complexocjena + interocjena) / 3
+    print('Finalna ocjena {}', finalna)
+    with open(
+            os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+'
+    ) as f:
+        # f = open("results.txt", "a+")
+        f.write(name + " " + str(finalna) + "\r\n")
+    f.close()
+    return finalna
 
 
 if __name__ == '__main__':
