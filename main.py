@@ -2,7 +2,7 @@ from pydriller import *
 import os
 import sys
 
-def getAllrepos(stringFolder):
+def getAllRepositories(stringFolder):
     with open(
             os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'w+'
     ) as f:
@@ -22,14 +22,14 @@ def getAllrepos(stringFolder):
             r = Repository(rep)
             for commit in r.traverse_commits():
                 break
-            DMM_ocjena(rep)
+            evaluationDMM(rep)
             print("")
         except Exception:
             print("Ovo nije ispravan git repository")
 
 
 
-def listOfRepos():
+def listOfRepositories():
     urls = ["https://github.com/icatic1/Promnesia", "https://github.com/ooad-2020-2021/Grupa2-Fukupno"]
     for commit in Repository(path_to_repo=urls).traverse_commits():
         print("Project {},Author {}, commit {}, date {}".format(
@@ -44,7 +44,7 @@ def modifiedFilesPerCommit(commit, stringFileName):
 
     return False
 
-def DMM_ocjena(repoString):
+def evaluationDMM(repoString):
     rm = Repository(repoString)
     allunit = 0
     allcomplex = 0
@@ -79,4 +79,4 @@ def DMM_ocjena(repoString):
 
 
 if __name__ == '__main__':
-    listOfRepos()
+    listOfRepositories()
