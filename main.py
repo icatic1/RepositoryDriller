@@ -3,13 +3,9 @@ import os
 import sys
 
 def getAllRepositories(stringFolder):
-    with open(
-            os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'w+'
-    ) as f:
-        stringFolder = stringFolder.replace("\\", "/")
-        stringFolder = stringFolder.replace("\\\\", "/")
 
-    f.close()
+    stringFolder = stringFolder.replace("\\", "/")
+    stringFolder = stringFolder.replace("\\\\", "/")
 
     my_list = os.listdir(stringFolder)
 
@@ -20,12 +16,20 @@ def getAllRepositories(stringFolder):
     for rep in urls:
         try:  # treba se ograditi od repozitorija bez Git-a u sebi da ne bi bilo problema
             r = Repository(rep)
+            author = ""
             for commit in r.traverse_commits():
+                author = commit.author.name
                 break
-            evaluationDMM(rep)
-            print("")
+            eDMM = evaluationDMM(rep)
+            eComm = englishCommit(rep)
+            print(rep + " " + author)
+            with open(
+                    os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+'
+            ) as f:
+                f.write(rep + "," + author + "," + str(eComm * 0.8 + eDMM * 0.2) + "\r\n")
+            f.close()
         except Exception:
-            print("Ovo nije ispravan git repository")
+            print("Nije ispravan git repository")
 
 
 
@@ -56,33 +60,33 @@ def englishCommit(repoString):
         send = 1
         message = commit.msg
         words = message.split(" ")
-        print(words)
+        #print(words)
         if words[0].endswith("ing") or words[0].endswith("ed"):
-            print("Wrong1")
+            #print("Wrong1")
             send -= 0.15
         if words[0][0].islower():
-            print("Wrong2")
+            #print("Wrong2")
             send -= 0.15
         if not words[0] in startingWords:
-            print("Wrong3")
+            #print("Wrong3")
             send -= 0.25
         if words[len(words) - 1].endswith("."):
-            print("Wrong4")
+            #print("Wrong4")
             send -= 0.1
         if len(message) >= 50:
-            print("Wrong5")
+            #print("Wrong5")
             send -= 0.25
         containsFile = False
 
         for w in words:
-            if w != "Initial" and w!= "Refactor" and w!= "Change" and w!= "Edit" and w!= "Modify":
-                if modifiedFilesPerCommit(commit, w) :
+            if w != "Initial" and w != "Refactor" and w != "Change" and w != "Edit" and w != "Modify":
+                if modifiedFilesPerCommit(commit, w):
                     containsFile = True
             else:
                 containsFile = True
 
         if not containsFile:
-            print("Wrong6")
+            #print("Wrong6")
             send -= 0.1
 
         full += send
@@ -96,10 +100,10 @@ def evaluationDMM(repoString):
     allcomplex = 0
     allinterfac = 0
     size = 0
-    name = ""
+    author = ""
     for commit in rm.traverse_commits():
-        if name == "":
-            name = commit.project_path  # mozda umjesto toga author.name
+        if author == "":
+            author = commit.author.name
 
         size += 1
         if commit.dmm_unit_size is not None:
@@ -119,24 +123,18 @@ def evaluationDMM(repoString):
         complexocjena += 0.15
 
     finalna = (unitocjena + complexocjena + interocjena) / 3
-    print('Finalna ocjena {}', finalna)
-    with open(
-            os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+'
-    ) as f:
-        f.write(name + " " + str(finalna) + "\r\n")
-    f.close()
     return finalna
 
 
 if __name__ == '__main__':
     print('Number of arguments:', len(sys.argv), 'arguments.')
     print('Argument List:', str(sys.argv))
-    # getAllrepos(sys.argv[1])
+    getAllRepositories(sys.argv[1])
     # DMM_ocjena("https://github.com/icatic1/Promnesia")
     # englishCommit("https://github.com/vljubovic/c9etf")
     # DMM_ocjena("https://github.com/vljubovic/c9etf")
-    a = englishCommit("https://github.com/icatic1/RepositoryDriller")
-    b = evaluationDMM("https://github.com/icatic1/RepositoryDriller")
-    print(a)
-    print(b)
-    print(a * 0.8 + b * 0.2)
+    #a = englishCommit("https://github.com/icatic1/RepositoryDriller")
+    #b = evaluationDMM("https://github.com/icatic1/RepositoryDriller")
+    #print(a)
+    #print(b)
+    #print(a * 0.8 + b * 0.2)
