@@ -38,6 +38,8 @@ def listOfRepositories():
 
 def modifiedFilesPerCommit(commit, stringFileName):
     for f in commit.modified_files:
+        if len(f.changed_methods) == 1 :
+            return True
         if f.filename == stringFileName:
             if f.nloc is not None and f.nloc > 2:
                 return True
@@ -73,8 +75,8 @@ def englishCommit(repoString):
         containsFile = False
 
         for w in words:
-            if w != "Initial" and w != "Initialize":
-                if modifiedFilesPerCommit(commit, w):
+            if w != "Initial" and w!= "Refactor" and w!= "Change" and w!= "Edit" and w!= "Modify":
+                if modifiedFilesPerCommit(commit, w) :
                     containsFile = True
             else:
                 containsFile = True
@@ -111,12 +113,16 @@ def evaluationDMM(repoString):
     complexocjena = allcomplex / size
     interocjena = allinterfac / size
 
+    if unitocjena < 0.5 :
+        unitocjena += 0.25
+    if complexocjena < 0.7 :
+        complexocjena += 0.15
+
     finalna = (unitocjena + complexocjena + interocjena) / 3
     print('Finalna ocjena {}', finalna)
     with open(
             os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+'
     ) as f:
-        # f = open("results.txt", "a+")
         f.write(name + " " + str(finalna) + "\r\n")
     f.close()
     return finalna
@@ -129,8 +135,8 @@ if __name__ == '__main__':
     # DMM_ocjena("https://github.com/icatic1/Promnesia")
     # englishCommit("https://github.com/vljubovic/c9etf")
     # DMM_ocjena("https://github.com/vljubovic/c9etf")
-    a = englishCommit("https://github.com/adzaferbeg1/AuctionApp")
-    b = evaluationDMM("https://github.com/adzaferbeg1/AuctionApp")
+    a = englishCommit("https://github.com/icatic1/RepositoryDriller")
+    b = evaluationDMM("https://github.com/icatic1/RepositoryDriller")
     print(a)
     print(b)
-    print(a * 0.75 + b * 0.25)
+    print(a * 0.8 + b * 0.2)
