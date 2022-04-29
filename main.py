@@ -1,9 +1,10 @@
+from git import InvalidGitRepositoryError
 from pydriller import *
 import os
 import sys
 
-def getAllRepositories(stringFolder):
 
+def getAllRepositories(stringFolder, language):
     stringFolder = stringFolder.replace("\\", "/")
     stringFolder = stringFolder.replace("\\\\", "/")
 
@@ -28,21 +29,13 @@ def getAllRepositories(stringFolder):
             ) as f:
                 f.write(rep + "," + author + "," + str(eComm * 0.8 + eDMM * 0.2) + "\r\n")
             f.close()
-        except Exception:
+        except InvalidGitRepositoryError:
             print("Nije ispravan git repository")
-
-
-
-def listOfRepositories():
-    urls = ["https://github.com/icatic1/Promnesia", "https://github.com/ooad-2020-2021/Grupa2-Fukupno"]
-    for commit in Repository(path_to_repo=urls).traverse_commits():
-        print("Project {},Author {}, commit {}, date {}".format(
-            commit.project_path, commit.author.name, commit.hash, commit.author_date))
 
 
 def modifiedFilesPerCommit(commit, stringFileName):
     for f in commit.modified_files:
-        if len(f.changed_methods) == 1 :
+        if len(f.changed_methods) == 1:
             return True
         if f.filename == stringFileName:
             if f.nloc is not None and f.nloc > 2:
@@ -50,31 +43,33 @@ def modifiedFilesPerCommit(commit, stringFileName):
 
     return False
 
+
 def englishCommit(repoString):
     full = 0
     length = 0
     startingWords = ["Initial", "Create", "Fix", "Add", "Remove", "Change", "Clear", "Initialize", "Merge", "Submit",
-                     "Handle", "Update", "Set", "Move", "Force", "Expand", "Edit", "Check", "Modify", "Bump", "Refactor"]
+                     "Handle", "Update", "Set", "Move", "Force", "Expand", "Edit", "Check", "Modify", "Bump",
+                     "Refactor"]
     commits = Repository(repoString).traverse_commits()
     for commit in commits:
         send = 1
         message = commit.msg
         words = message.split(" ")
-        #print(words)
+
         if words[0].endswith("ing") or words[0].endswith("ed"):
-            #print("Wrong1")
+            # print("Wrong1")
             send -= 0.15
         if words[0][0].islower():
-            #print("Wrong2")
+            # print("Wrong2")
             send -= 0.15
         if not words[0] in startingWords:
-            #print("Wrong3")
+            # print("Wrong3")
             send -= 0.25
         if words[len(words) - 1].endswith("."):
-            #print("Wrong4")
+            # print("Wrong4")
             send -= 0.1
         if len(message) >= 50:
-            #print("Wrong5")
+            # print("Wrong5")
             send -= 0.25
         containsFile = False
 
@@ -86,13 +81,14 @@ def englishCommit(repoString):
                 containsFile = True
 
         if not containsFile:
-            #print("Wrong6")
+            # print("Wrong6")
             send -= 0.1
 
         full += send
-        length+=1
+        length += 1
 
-    return full/length
+    return full / length
+
 
 def evaluationDMM(repoString):
     rm = Repository(repoString)
@@ -100,11 +96,7 @@ def evaluationDMM(repoString):
     allcomplex = 0
     allinterfac = 0
     size = 0
-    author = ""
     for commit in rm.traverse_commits():
-        if author == "":
-            author = commit.author.name
-
         size += 1
         if commit.dmm_unit_size is not None:
             allunit += commit.dmm_unit_size
@@ -117,9 +109,10 @@ def evaluationDMM(repoString):
     complexocjena = allcomplex / size
     interocjena = allinterfac / size
 
-    if unitocjena < 0.5 :
+    # dodano kao izjednačavanje ocjenjivanja
+    if unitocjena < 0.5:
         unitocjena += 0.25
-    if complexocjena < 0.7 :
+    if complexocjena < 0.7:
         complexocjena += 0.15
 
     finalna = (unitocjena + complexocjena + interocjena) / 3
@@ -127,14 +120,4 @@ def evaluationDMM(repoString):
 
 
 if __name__ == '__main__':
-    print('Number of arguments:', len(sys.argv), 'arguments.')
-    print('Argument List:', str(sys.argv))
-    getAllRepositories(sys.argv[1])
-    # DMM_ocjena("https://github.com/icatic1/Promnesia")
-    # englishCommit("https://github.com/vljubovic/c9etf")
-    # DMM_ocjena("https://github.com/vljubovic/c9etf")
-    #a = englishCommit("https://github.com/icatic1/RepositoryDriller")
-    #b = evaluationDMM("https://github.com/icatic1/RepositoryDriller")
-    #print(a)
-    #print(b)
-    #print(a * 0.8 + b * 0.2)
+    getAllRepositories(sys.argv[1], "-e")
