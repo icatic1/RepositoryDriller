@@ -2,6 +2,31 @@ from pydriller import *
 import os
 import sys
 
+def getAllrepos(stringFolder):
+    with open(
+            os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'w+'
+    ) as f:
+        stringFolder = stringFolder.replace("\\", "/")
+        stringFolder = stringFolder.replace("\\\\", "/")
+
+    f.close()
+
+    my_list = os.listdir(stringFolder)
+
+    urls = []
+    for f in my_list:
+        urls.append(stringFolder + "/" + f)
+
+    for rep in urls:
+        try:  # treba se ograditi od repozitorija bez Git-a u sebi da ne bi bilo problema
+            r = Repository(rep)
+            for commit in r.traverse_commits():
+                break
+            DMM_ocjena(rep)
+            print("")
+        except Exception:
+            print("Ovo nije ispravan git repository")
+
 
 
 def listOfRepos():
