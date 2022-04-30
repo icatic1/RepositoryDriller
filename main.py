@@ -60,6 +60,25 @@ def modifiedFilesPerCommit(commit, stringFileName):
     return False
 
 
+def commitMessageBoth(message, bosnian):
+    words = message.split(" ")
+    evaluation = 0
+    if words[0][0].islower():
+        # print("Wrong2")
+        evaluation -= 0.15
+        if bosnian:
+            evaluation -= 0.1
+    if words[len(words) - 1].endswith("."):
+        # print("Wrong4")
+        evaluation -= 0.1
+        if bosnian:
+            evaluation -= 0.1
+    if len(message) >= 50:
+        # print("Wrong5")
+        evaluation -= 0.25
+    return evaluation
+
+
 def englishCommit(repoString):
     fullEvaluation = 0
     numberOfCommits = 0
@@ -77,20 +96,12 @@ def englishCommit(repoString):
         if words[0].endswith("ing") or words[0].endswith("ed"):
             # print("Wrong1")
             evaluation -= 0.15
-        if words[0][0].islower():
-            # print("Wrong2")
-            evaluation -= 0.15
         if not words[0] in startingWords:
             # print("Wrong3")
             evaluation -= 0.25
             if words[0][0].islower():
                 evaluation += 0.1
-        if words[len(words) - 1].endswith("."):
-            # print("Wrong4")
-            evaluation -= 0.1
-        if len(message) >= 50:
-            # print("Wrong5")
-            evaluation -= 0.25
+        evaluation += commitMessageBoth(message, False)
         containsFile = False
 
         for w in words:
@@ -126,9 +137,6 @@ def bosnianCommit(repoString):
         words = message.split(" ")
 
         # Rules for evaluation
-        if words[0][0].islower():
-            # print("Wrong2")
-            evaluation -= 0.25
         evaluation -= 0.2
         search = True
         for onePart in startingWordsBosnian:
@@ -136,12 +144,7 @@ def bosnianCommit(repoString):
                 if onePart == "Inicijaliz" or onePart == "Refaktor" or onePart == "Promjen" or onePart == "Izmijen" or onePart == "Ažurira" or onePart == "Initial":
                     search = False
                 evaluation += 0.2
-        if words[len(words) - 1].endswith("."):
-            # print("Wrong4")
-            evaluation -= 0.2
-        if len(message) >= 50:
-            # print("Wrong5")
-            evaluation -= 0.25
+        evaluation += commitMessageBoth(message, True)
         containsFile = False
 
         for w in words:
