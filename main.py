@@ -5,6 +5,14 @@ import sys
 
 
 def getAllRepositories(stringFolder, language):
+    if language == "" or language is None:
+        language = "-e"
+    if not language == "-e" and not language == "-b":
+        print("The chosen language is not supported by RepositoryDriller. Please use -e for English or -b for Bosnian.")
+        print("The default language is English if you don't send that parameter.")
+        return
+
+    # Windows fix for forward-slash symbol
     stringFolder = stringFolder.replace("\\", "/")
     stringFolder = stringFolder.replace("\\\\", "/")
 
@@ -15,7 +23,7 @@ def getAllRepositories(stringFolder, language):
         urls.append(stringFolder + "/" + f)
 
     for rep in urls:
-        try:  # treba se ograditi od repozitorija bez Git-a u sebi da ne bi bilo problema
+        try:  # not a Git Repository
             r = Repository(rep)
             author = ""
             for commit in r.traverse_commits():
@@ -31,16 +39,17 @@ def getAllRepositories(stringFolder, language):
             with open(
                     os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+'
             ) as f:
+                # DMM evaluation taken for 20% of the final grade
                 f.write(rep + "," + author + "," + str(eComm * 0.8 + eDMM * 0.2) + "\r\n")
             f.close()
         except InvalidGitRepositoryError:
-            print("Nije ispravan git repository")
+            print("Not a Git repository")
 
 
 def modifiedFilesPerCommit(commit, stringFileName):
     for f in commit.modified_files:
         if ".xml" or ".fxml" in f.filename:
-            if commit.modified_files != 1 and f.change_type == "Added":
+            if commit.modified_files != 1 and f.change_type == ModificationType.ADD:
                 return True
         if len(f.changed_methods) == 1:
             return True
@@ -52,34 +61,36 @@ def modifiedFilesPerCommit(commit, stringFileName):
 
 
 def englishCommit(repoString):
-    full = 0
-    length = 0
+    fullEvaluation = 0
+    numberOfCommits = 0
     startingWords = ["Initial", "Create", "Fix", "Add", "Remove", "Change", "Clear", "Initialize", "Merge", "Submit",
                      "Handle", "Update", "Set", "Move", "Force", "Expand", "Edit", "Check", "Modify", "Bump",
                      "Refactor"]
+
     commits = Repository(repoString).traverse_commits()
     for commit in commits:
-        send = 1
+        evaluation = 1
         message = commit.msg
         words = message.split(" ")
 
+        # Rules for evaluation
         if words[0].endswith("ing") or words[0].endswith("ed"):
-            print("Wrong1")
-            send -= 0.15
+            # print("Wrong1")
+            evaluation -= 0.15
         if words[0][0].islower():
-            print("Wrong2")
-            send -= 0.15
+            # print("Wrong2")
+            evaluation -= 0.15
         if not words[0] in startingWords:
-            print("Wrong3")
-            send -= 0.25
+            # print("Wrong3")
+            evaluation -= 0.25
             if words[0][0].islower():
-                send += 0.1
+                evaluation += 0.1
         if words[len(words) - 1].endswith("."):
-            print("Wrong4")
-            send -= 0.1
+            # print("Wrong4")
+            evaluation -= 0.1
         if len(message) >= 50:
-            print("Wrong5")
-            send -= 0.25
+            # print("Wrong5")
+            evaluation -= 0.25
         containsFile = False
 
         for w in words:
@@ -90,48 +101,47 @@ def englishCommit(repoString):
                 containsFile = True
 
         if not containsFile:
-            print("Wrong6")
-            send -= 0.1
+            # print("Wrong6")
+            evaluation -= 0.1
 
-        full += send
-        length += 1
+        fullEvaluation += evaluation
+        numberOfCommits += 1
 
-    return full / length
+    return fullEvaluation / numberOfCommits
 
 
 def bosnianCommit(repoString):
-    full = 0
-    length = 0
+    fullEvaluation = 0
+    numberOfCommits = 0
 
     startingWordsBosnian = ["Dodan", "Promjen", "Isprav", "Reorganiz", "Zavrsen", "Inicijaliz",
                             "Spoj", "Preda", "Obrad", "Ažurira", "Postav", "Pomjer", "Forsir", "Prošir", "Ured",
                             "Izmijen",
-                            "Refaktor", "Kreira", "Uklon"]
+                            "Refaktor", "Kreira", "Uklon", "Initial"]
+
     commits = Repository(repoString).traverse_commits()
     for commit in commits:
-        send = 1
+        evaluation = 1
         message = commit.msg
         words = message.split(" ")
 
-        if words[0].endswith("ing") or words[0].endswith("ed"):
-            # print("Wrong1")
-            send -= 0.15
+        # Rules for evaluation
         if words[0][0].islower():
             # print("Wrong2")
-            send -= 0.15
-        send -= 0.25
+            evaluation -= 0.25
+        evaluation -= 0.2
         search = True
         for onePart in startingWordsBosnian:
             if onePart in words[0] or onePart.lower() in words[0]:
-                if onePart == "Inicijaliz" or onePart == "Refaktor" or onePart == "Promjen" or onePart == "Izmijen" or onePart == "Ažurira":
+                if onePart == "Inicijaliz" or onePart == "Refaktor" or onePart == "Promjen" or onePart == "Izmijen" or onePart == "Ažurira" or onePart == "Initial":
                     search = False
-                send += 0.25
+                evaluation += 0.2
         if words[len(words) - 1].endswith("."):
             # print("Wrong4")
-            send -= 0.1
+            evaluation -= 0.2
         if len(message) >= 50:
             # print("Wrong5")
-            send -= 0.25
+            evaluation -= 0.25
         containsFile = False
 
         for w in words:
@@ -143,45 +153,46 @@ def bosnianCommit(repoString):
 
         if not containsFile:
             # print("Wrong6")
-            send -= 0.1
+            evaluation -= 0.1
 
-        full += send
-        length += 1
+        fullEvaluation += evaluation
+        numberOfCommits += 1
 
-    return full / length
+    return fullEvaluation / numberOfCommits
 
 
 def evaluationDMM(repoString):
     rm = Repository(repoString)
-    allunit = 0
-    allcomplex = 0
-    allinterfac = 0
+    allUnitEval = 0
+    allComplexityEval = 0
+    allInterfaceEval = 0
     size = 0
+
     for commit in rm.traverse_commits():
         size += 1
         if commit.dmm_unit_size is not None:
-            allunit += commit.dmm_unit_size
+            allUnitEval += commit.dmm_unit_size
         if commit.dmm_unit_complexity is not None:
-            allcomplex += commit.dmm_unit_complexity
+            allComplexityEval += commit.dmm_unit_complexity
         if commit.dmm_unit_interfacing is not None:
-            allinterfac += commit.dmm_unit_interfacing
+            allInterfaceEval += commit.dmm_unit_interfacing
 
-    unitocjena = allunit / size
-    complexocjena = allcomplex / size
-    interocjena = allinterfac / size
+    unitEval = allUnitEval / size
+    complexityEval = allComplexityEval / size
+    interfaceEval = allInterfaceEval / size
 
-    # dodano kao izjednačavanje ocjenjivanja
-    if unitocjena < 0.5:
-        unitocjena += 0.25
-    if complexocjena < 0.7:
-        complexocjena += 0.15
+    # More realistic evaluation
+    if unitEval < 0.5:
+        unitEval += 0.25
+    if complexityEval < 0.7:
+        complexityEval += 0.15
 
-    finalna = (unitocjena + complexocjena + interocjena) / 3
-    return finalna
+    finalEvaluationDMM = (unitEval + complexityEval + interfaceEval) / 3
+    return finalEvaluationDMM
 
 
 if __name__ == '__main__':
-    send = ""
+    secondParameter = ""
     if len(sys.argv) == 3:
-        send = sys.argv[2]
-    getAllRepositories(sys.argv[1], send)
+        secondParameter = sys.argv[2]
+    getAllRepositories(sys.argv[1], secondParameter)
