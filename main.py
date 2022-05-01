@@ -37,7 +37,7 @@ def getAllRepositories(stringFolder, language):
                 eComm = englishCommit(rep)
             print(rep + " -- " + author)
             with open(
-                    os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+'
+                    os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+',  encoding="utf-8"
             ) as f:
                 # DMM evaluation taken for 20% of the final grade
                 f.write(rep + "," + author + "," + str(eComm * 0.8 + eDMM * 0.2) + "\r\n")
@@ -64,17 +64,14 @@ def commitMessageBoth(message, bosnian):
     words = message.split(" ")
     evaluation = 0
     if words[0][0].islower():
-        # print("Wrong2")
         evaluation -= 0.15
         if bosnian:
             evaluation -= 0.1
     if words[len(words) - 1].endswith("."):
-        # print("Wrong4")
         evaluation -= 0.1
         if bosnian:
             evaluation -= 0.1
     if len(message) >= 50:
-        # print("Wrong5")
         evaluation -= 0.25
     return evaluation
 
@@ -94,10 +91,8 @@ def englishCommit(repoString):
 
         # Rules for evaluation
         if words[0].endswith("ing") or words[0].endswith("ed"):
-            # print("Wrong1")
             evaluation -= 0.15
         if not words[0] in startingWords:
-            # print("Wrong3")
             evaluation -= 0.25
             if words[0][0].islower():
                 evaluation += 0.1
@@ -112,7 +107,6 @@ def englishCommit(repoString):
                 containsFile = True
 
         if not containsFile:
-            # print("Wrong6")
             evaluation -= 0.1
 
         fullEvaluation += evaluation
@@ -155,7 +149,6 @@ def bosnianCommit(repoString):
                 containsFile = True
 
         if not containsFile:
-            # print("Wrong6")
             evaluation -= 0.1
 
         fullEvaluation += evaluation
