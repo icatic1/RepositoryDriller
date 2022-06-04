@@ -1,4 +1,5 @@
 [![icatic1](https://img.shields.io/badge/Version-v.1.0.0-brightgreen)]()
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 # Repository Driller
 
 A simple Python script for the analysis and evaluation of Git Repositories for best practices in two languages.
