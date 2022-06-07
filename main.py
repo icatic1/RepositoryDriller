@@ -37,7 +37,7 @@ def getAllRepositories(stringFolder, language):
                 eComm = englishCommit(rep)
             print(rep + " -- " + author)
             with open(
-                    os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+',  encoding="utf-8"
+                    os.path.join(os.path.expanduser('~'), 'Desktop', 'results.txt'), 'a+', encoding="utf-8"
             ) as f:
                 # DMM evaluation taken for 20% of the final grade
                 f.write(rep + "," + author + "," + str(eComm * 0.8 + eDMM * 0.2) + "\r\n")
@@ -58,6 +58,18 @@ def modifiedFilesPerCommit(commit, stringFileName):
                 return True
 
     return False
+
+
+def issueResolveMessage(message, evaluation) -> float:
+    ret = 0.0
+    ret += evaluation
+
+    if evaluation < 0.9:
+        if "Fix" or "Close" in message:
+            if any(char.isdigit() for char in message[5:-1]):
+                ret += 0.1
+
+    return ret
 
 
 def commitMessageBoth(message, bosnian):
@@ -85,7 +97,7 @@ def englishCommit(repoString):
 
     commits = Repository(repoString).traverse_commits()
     for commit in commits:
-        evaluation = 1
+        evaluation = 1.0
         message = commit.msg
         words = message.split(" ")
 
@@ -108,6 +120,8 @@ def englishCommit(repoString):
 
         if not containsFile:
             evaluation -= 0.1
+
+        evaluation = issueResolveMessage(message, evaluation)
 
         fullEvaluation += evaluation
         numberOfCommits += 1
@@ -150,6 +164,8 @@ def bosnianCommit(repoString):
 
         if not containsFile:
             evaluation -= 0.1
+
+        evaluation = issueResolveMessage(message, evaluation)
 
         fullEvaluation += evaluation
         numberOfCommits += 1
