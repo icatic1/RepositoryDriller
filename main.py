@@ -63,10 +63,14 @@ def modifiedFilesPerCommit(commit, stringFileName):
 def issueResolveMessage(message, evaluation) -> float:
     ret = 0.0
     ret += evaluation
-
+    
+    # Issue closing tracker
     if evaluation < 0.9:
-        if "Fix" or "Close" in message:
-            if any(char.isdigit() for char in message[5:-1]):
+        if "Fix" in message or "Close" in message:
+            res = message.find('#')
+            if res == -1:
+                return ret
+            if any(char.isdigit() for char in message[res:-1]):
                 ret += 0.1
 
     return ret
