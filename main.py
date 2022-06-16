@@ -47,8 +47,10 @@ def getAllRepositories(stringFolder, language):
 
 
 def modifiedFilesPerCommit(commit, stringFileName):
+    markuplanguage = [".fxml", "html", "xml", ".atom", ".eml", ".json", ".jsonld", ".kprx", ".ps", ".met",
+                     ".metalink", ".rss", ".md", ".markdown", ".se"]
     for f in commit.modified_files:
-        if ".xml" or ".fxml" in f.filename:
+        if any(el in f.filename for el in markuplanguage):
             if commit.modified_files != 1 and f.change_type == ModificationType.ADD:
                 return True
         if len(f.changed_methods) == 1:
@@ -63,7 +65,7 @@ def modifiedFilesPerCommit(commit, stringFileName):
 def issueResolveMessage(message, evaluation) -> float:
     ret = 0.0
     ret += evaluation
-    
+
     # Issue closing tracker
     if evaluation < 0.9:
         if "Fix" in message or "Close" in message:
